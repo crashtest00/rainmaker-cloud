@@ -26,6 +26,27 @@ const PORT = 3000;
  
 app.get('/', (request, response) => response.send('Hello from Rainmaker'));
 
+// API route to handle the /api/getUpdate request
+app.get('/api/getUpdate', (req, res) => {
+  const filePath = path.join(__dirname, 'currentVersion.json');
+
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Failed to read currentVersion.json:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    try {
+      const versionData = JSON.parse(data);
+      res.json(versionData);
+      console.log(`JSON was delivered successfully at ${new Date().toLocaleString()}!`)
+    } catch (parseError) {
+      console.error('Failed to parse currentVersion.json:', parseError);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+});
+
 // API route that responds with JSON object based on MAC address
 app.get('/api/manifolds', (req, res) => {
     const clientMacAddress = req.headers['mac-address']; // Assuming the MAC address is passed as a custom header 'mac-address'
@@ -46,24 +67,45 @@ app.put('/api/manifolds/1', (req, res) => {
     updateZones('manifold1.json', manifoldData, res);
   });
   
-  // API route to update zones2.json
-  app.put('/api/manifolds/2', (req, res) => {
-    const manifoldData = req.body;
-    updateZones('manifold2.json', manifoldData, res);
-  });
+// API route to update zones2.json
+app.put('/api/manifolds/2', (req, res) => {
+  const manifoldData = req.body;
+  updateZones('manifold2.json', manifoldData, res);
+});
   
 // Update firmware
-let downloadCounter = 1;
-app.get('/firmware/httpUpdateNew.bin', (request, response) => {
-    response.download(path.join(__dirname, 'firmware/httpUpdateNew.bin'), 'httpUpdateNew.bin', (err)=>{
-        if (err) {
-            console.error("Problem on download firmware: ", err)
-        }else{
-            downloadCounter++;
-        }
-    });
-    console.log('Firmware has been updated '+downloadCounter+' times!')
-})
+app.get('/firmware/:filename', (request, response) => {
+  console.log("New download request")
+  const filePath = path.join(__dirname, 'currentVersion.json');
+
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Failed to read currentVersion.json:', err);
+      return response.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    try {
+      const versionData = JSON.parse(data);
+      const firmwarePath = versionData.firmware_path;
+      const firmwareFileName = path.basename(firmwarePath);
+
+      if (request.params.filename === firmwareFileName) {
+        response.download(firmwarePath, firmwareFileName, (err) => {
+          if (err) {
+            console.error('Problem on downloading firmware:', err);
+          } else {
+            console.log('Latest firmware was downloaded successfully!');
+          }
+        });
+      } else {
+        response.status(404).json({ error: 'File not found' });
+      }
+    } catch (parseError) {
+      console.error('Failed to parse currentVersion.json:', parseError);
+      return response.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+});
  
 // Start the server
 app.listen(PORT, () => {

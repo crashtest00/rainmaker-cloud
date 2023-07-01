@@ -1,0 +1,6 @@
+{
+    "version":"0.6",
+    "created_date":"2023-06-28",
+    "firmware_path":"firmware/FIRMWARE_VERSION-0_6.bin",
+    "filesystem_path":"filesystem/FILESYSTEM_VERSION-0_3.bin"
+}
