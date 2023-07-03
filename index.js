@@ -18,7 +18,7 @@ app.use(express.json()); // Enable JSON body parsing
 const nets = networkInterfaces();
 
 // MAC addresses to compare against
-const macAddress1 = 'AA:BB:CC:DD:EE:FF';
+const macAddress1 = 'C8:F0:9E:4E:10:8C';
 const macAddress2 = '11:22:33:44:55:66';
 
 // Server port
@@ -54,10 +54,13 @@ app.get('/api/manifolds', (req, res) => {
     // Check the MAC address against the hardcoded values
     if (clientMacAddress === macAddress1) {
       sendResponse('manifold1.json', res);
+      console.log("Response sent to Manifold 1 at MAC address: ", macAddress1)
     } else if (clientMacAddress === macAddress2) {
       sendResponse('manifold2.json', res);
+      console.log("Response sent to Manifold 2 at MAC address: ", macAddress1)
     } else {
       res.status(404).json({ error: 'MAC address not found' });
+      console.log("Could not resolve MAC address: ", req.headers['mac-address']);
     }
 });
 
