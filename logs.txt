@@ -1,0 +1,6 @@
+GET /api/manifolds
+::ffff:192.168.1.167 - - [03/Jul/2023:18:43:33 +0000] "GET /api/manifolds HTTP/1.1" 200 79 "-" "vscode-restclient"
+GET /api/manifolds
+Request Headers: {"user-agent":"vscode-restclient","mac-address":"C8:F0:9E:4E:10:8C","content-type":"application/json","accept-encoding":"gzip, deflate","content-length":"3","host":"192.168.1.168:3000","connection":"close"}
+Request Body: {}
+::ffff:192.168.1.167 - - [03/Jul/2023:18:45:45 +0000] "GET /api/manifolds HTTP/1.1" 200 79 "-" "vscode-restclient"

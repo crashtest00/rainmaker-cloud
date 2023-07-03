@@ -9,6 +9,7 @@ that can be used to update those durations. It also provides updated firmware.
 // sudo lsof -i :3000
 // kill -9 <PID>
 const express = require('express');
+const morgan = require('morgan');
 const { networkInterfaces } = require('os');
 const path = require('path');
 const fs = require('fs');
@@ -23,7 +24,31 @@ const macAddress2 = '11:22:33:44:55:66';
 
 // Server port
 const PORT = 3000;
- 
+
+// Create a write stream to the log file
+const logStream = fs.createWriteStream('logs.txt', { flags: 'a' });
+
+// Enable JSON body parsing
+app.use(express.json());
+
+// Enable logging to console and file using Morgan
+app.use(morgan('combined', { stream: logStream }));
+
+// Log requests manually
+app.use((req, res, next) => {
+  // Log the request details to the console
+  console.log(`${req.method} ${req.url}`);
+  console.log('Request Headers:', req.headers);
+  console.log('Request Body:', req.body);
+
+  // Log the request details to the file
+  logStream.write(`${req.method} ${req.url}\n`);
+  logStream.write('Request Headers: ' + JSON.stringify(req.headers) + '\n');
+  logStream.write('Request Body: ' + JSON.stringify(req.body) + '\n');
+
+  next();
+});
+
 app.get('/', (request, response) => response.send('Hello from Rainmaker'));
 
 // API route to handle the /api/getUpdate request
