@@ -20,7 +20,7 @@ const nets = networkInterfaces();
 
 // MAC addresses to compare against
 const macAddress1 = 'C8:F0:9E:4E:10:8C';
-const macAddress2 = '11:22:33:44:55:66';
+const macAddress2 = 'C8:F0:9E:50:6E:F4';
 
 // Server port
 const PORT = 3000;
@@ -133,6 +133,21 @@ app.get('/firmware/:filename', (request, response) => {
       return response.status(500).json({ error: 'Internal Server Error' });
     }
   });
+});
+
+// Endpoint to calculate time until referenced datetime
+app.get('/api/nextrun', (req, res) => {
+  // Read the JSON file
+  const jsonData = fs.readFileSync('nextRun.json');
+  const { datetime } = JSON.parse(jsonData);
+
+  // Calculate the time difference in seconds
+  const targetDatetime = new Date(datetime);
+  const currentTime = new Date();
+  const timeDifferenceSeconds = Math.floor((targetDatetime - currentTime) / 1000);
+
+  // Return the time difference as an unsigned int
+  res.send(timeDifferenceSeconds.toString());
 });
  
 // Start the server
