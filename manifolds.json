@@ -1,0 +1,64 @@
+[
+  {
+    "manifoldID": "testManifold",
+    "macAddress": "C8:F0:9E:4E:10:8C",
+    "zones": [
+      {
+        "Zone": "1",
+        "duration": 5
+      },
+      {
+        "Zone": "2",
+        "duration": 5
+      },
+      {
+        "Zone": "3",
+        "duration": 5
+      },
+      {
+        "Zone": "4",
+        "duration": 5
+      }
+    ]
+  },
+  {
+    "manifoldID": "manifold1",
+    "macAddress": "CC:DB:A7:68:CD:D0",
+    "zones": [
+      {
+        "Zone": "1",
+        "duration": 3600
+      },
+      {
+        "Zone": "2",
+        "duration": 2700
+      },
+      {
+        "Zone": "3",
+        "duration": 2700
+      }
+    ]
+  },
+  {
+    "manifoldID": "manifold2",
+    "macAddress": "A0:B7:65:61:E8:04",
+    "zones": [
+      {
+        "Zone": "1",
+        "duration": 3600
+      },
+      {
+        "Zone": "2",
+        "duration": 2700
+      },
+      {
+        "Zone": "3",
+        "duration": 2700
+      },
+      {
+        "Zone": "4",
+        "duration": 1800
+      }
+    ]
+  }
+]

@@ -1,6 +1,5 @@
 {
-    "version":"0.4",
-    "created_date":"2023-07-03",
-    "firmware_path":"firmware/CONTROLLER-v0.4.bin",
-    "filesystem_path":"filesystem/FILESYSTEM_VERSION-0_3.bin"
+    "version":"0.5",
+    "created_date":"2023-07-25",
+    "firmware_path":"firmware/CONTROLLER-v0.5.bin"
 }

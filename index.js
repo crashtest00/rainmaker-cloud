@@ -13,14 +13,11 @@ const morgan = require('morgan');
 const { networkInterfaces } = require('os');
 const path = require('path');
 const fs = require('fs');
+const { time } = require('console');
  
 const app = express();
 app.use(express.json()); // Enable JSON body parsing
 const nets = networkInterfaces();
-
-// MAC addresses to compare against
-const macAddress1 = 'C8:F0:9E:4E:10:8C';
-const macAddress2 = 'C8:F0:9E:50:6E:F4';
 
 // Server port
 const PORT = 3000;
@@ -72,33 +69,44 @@ app.get('/api/getUpdate', (req, res) => {
   });
 });
 
-// API route that responds with JSON object based on MAC address
+// API route that responds with JSON object based on MAC address in manifolds.json
 app.get('/api/manifolds', (req, res) => {
     const clientMacAddress = req.headers['mac-address']; // Assuming the MAC address is passed as a custom header 'mac-address'
     
-    // Check the MAC address against the hardcoded values
-    if (clientMacAddress === macAddress1) {
-      sendResponse('manifold1.json', res);
-      console.log("Response sent to Manifold 1 at MAC address: ", macAddress1)
-    } else if (clientMacAddress === macAddress2) {
-      sendResponse('manifold2.json', res);
-      console.log("Response sent to Manifold 2 at MAC address: ", macAddress1)
-    } else {
-      res.status(404).json({ error: 'MAC address not found' });
-      console.log("Could not resolve MAC address: ", req.headers['mac-address']);
-    }
+    // Read the data from "manifolds.json" file
+    fs.readFile(path.join(__dirname, 'manifolds.json'), 'utf8', (err, data) => {
+      if (err) {
+        console.error('Failed to read manifolds.json:', err);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+
+      try {
+        const manifoldsData = JSON.parse(data);
+  
+        // Find the manifold with the matching MAC address
+        const manifold = manifoldsData.find(manifold => manifold.macAddress === clientMacAddress);
+  
+        if (manifold) {
+          // Respond with the zone data for the matched manifold
+          res.json(manifold.zones);
+          console.log(`Zone durations sent to ${manifold.manifoldID} at MAC address: ${clientMacAddress}`);
+        } else {
+          // No matching MAC address found
+          res.status(404).json({ error: 'MAC address not found' });
+          console.log('Could not resolve MAC address:', clientMacAddress);
+        }
+      } catch (parseError) {
+        console.error('Failed to parse manifolds.json:', parseError);
+        res.status(500).json({ error: 'Internal Server Error' });
+      }
+    });
 });
 
-// API route to update manifold1.json
-app.put('/api/manifolds/1', (req, res) => {
-    const manifoldData = req.body;
-    updateZones('manifold1.json', manifoldData, res);
-  });
-  
-// API route to update zones2.json
-app.put('/api/manifolds/2', (req, res) => {
+// API route to update manifolds.json
+app.patch('/api/manifolds/:manifoldID', (req, res) => {
+  const manifoldID = req.params.manifoldID;
   const manifoldData = req.body;
-  updateZones('manifold2.json', manifoldData, res);
+  updateManifold(manifoldID, manifoldData, res);
 });
   
 // Update firmware
@@ -145,6 +153,8 @@ app.get('/api/nextrun', (req, res) => {
   const targetDatetime = new Date(datetime);
   const currentTime = new Date();
   const timeDifferenceSeconds = Math.floor((targetDatetime - currentTime) / 1000);
+  // const timeDifferenceSeconds = 2000; // Hack to handle overflowing int on client side
+  console.log('Sleeping for %d seconds at %s', timeDifferenceSeconds, currentTime)
 
   // Return the time difference as an unsigned int
   res.send(timeDifferenceSeconds.toString());
@@ -200,5 +210,49 @@ function updateZones(filename, manifoldData, res) {
     }
     
     res.json({ message: `File ${filename} updated successfully` });
+  });
+}
+
+// Helper function to update the manifolds.json file
+function updateManifold(manifoldID, manifoldData, res) {
+  // Read the existing data from manifolds.json
+  fs.readFile('manifolds.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Failed to read manifolds.json:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+
+    try {
+      // Parse the JSON data from manifolds.json
+      const jsonData = JSON.parse(data);
+
+      // Find the index of the manifold with the given manifoldID
+      const index = jsonData.findIndex(manifold => manifold.manifoldID === manifoldID);
+
+      if (index === -1) {
+        // Manifold with the given ID not found
+        return res.status(404).json({ error: 'Manifold not found' });
+      }
+
+      // Update the zones data for the manifold
+      jsonData[index].zones = manifoldData.zones;
+
+      // Convert the updated JSON data back to string
+      const updatedData = JSON.stringify(jsonData, null, 2);
+
+      // Write the updated data back to manifolds.json
+      fs.writeFile('manifolds.json', updatedData, 'utf8', err => {
+        if (err) {
+          console.error('Failed to write manifolds.json:', err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+        }
+
+        console.log(`Manifold ${manifoldID} data updated successfully`);
+        res.json({ message: 'Manifold data updated successfully' });
+      });
+    } catch (parseError) {
+      console.error('Failed to parse manifolds.json:', parseError);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
   });
 }
